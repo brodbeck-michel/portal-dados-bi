@@ -1,6 +1,9 @@
 # Portal de Dados BI. O mesmo arquivo serve local e VPS; o que muda é o .env.
 # Na VPS a porta fica presa ao 127.0.0.1 (o Caddy é a única porta de entrada):
 #   HTTP_PORT=127.0.0.1:8090
+#
+# Isolamento: na VPS o portal divide a máquina com o CRM Lab. Os limites abaixo
+# garantem que ele não disputa CPU/memória nem ganha privilégio no host.
 name: portal-dados-bi
 
 services:
@@ -12,5 +15,20 @@ services:
     ports:
       - "${HTTP_PORT:-127.0.0.1:3000}:3000"
     volumes:
-      # Banco, logos (dentro do banco) e backups ficam aqui.
+      # Banco (com as logos dentro) e backups ficam aqui — único lugar gravável.
       - ./data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 100
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
