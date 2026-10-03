@@ -1,6 +1,7 @@
 node_modules/
 .env
-data/
+data/*
+!data/.gitkeep
 *.sqlite
 *.sqlite-*
 .claude/settings.local.json
