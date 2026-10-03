@@ -1,0 +1,17 @@
+{
+  "name": "portal-dados-bi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portal de Dados BI — acesso controlado e auditado a painéis de BI, multi-cliente",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/*.test.js\"",
+    "operador": "node --disable-warning=ExperimentalWarning scripts/criar-operador.js",
+    "backup": "node --disable-warning=ExperimentalWarning scripts/backup.js"
+  }
+}

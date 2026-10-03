@@ -1,0 +1,16 @@
+# Portal de Dados BI. O mesmo arquivo serve local e VPS; o que muda é o .env.
+# Na VPS a porta fica presa ao 127.0.0.1 (o Caddy é a única porta de entrada):
+#   HTTP_PORT=127.0.0.1:8090
+name: portal-dados-bi
+
+services:
+  app:
+    build: .
+    image: portal-dados-bi:${APP_VERSION:-dev}
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${HTTP_PORT:-127.0.0.1:3000}:3000"
+    volumes:
+      # Banco, logos (dentro do banco) e backups ficam aqui.
+      - ./data:/app/data

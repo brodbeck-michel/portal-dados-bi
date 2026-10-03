@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clientes · Portal de Dados BI</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="icon" href="/img/icone.svg">
+  <script type="module" src="/js/platform.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="topbar-brand" href="/platform"><img src="/img/icone.svg" alt="" width="32" height="32"><span>Portal de Dados BI</span></a>
+    <span class="badge badge-brand">Operador</span>
+    <div class="topbar-actions" id="operator-menu"></div>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <h1>Clientes</h1>
+      <span class="spacer"></span>
+      <button type="button" class="btn-primary" id="new-tenant">Novo cliente</button>
+    </div>
+    <section id="tenants" aria-live="polite"><p class="muted">Carregando...</p></section>
+  </main>
+</body>
+</html>
