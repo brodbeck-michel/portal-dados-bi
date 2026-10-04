@@ -9,17 +9,18 @@ const TENANT_COOKIE = 'pdb_sessao';
 const PLATFORM_COOKIE = 'pdb_plataforma';
 
 // Páginas de cada tipo de endereço. Toda página é estática; os dados vêm da API.
+// Portal e administração são a mesma página (navegação por #/...).
 const TENANT_PAGES = {
   '/': 'index.html',
   '/login': 'login.html',
   '/trocar-senha': 'trocar-senha.html',
-  '/admin': 'admin.html',
 };
+const TENANT_REDIRECTS = { '/admin': '/#/admin/relatorios' };
 const PLATFORM_PAGES = {
   '/platform': 'platform/index.html',
   '/platform/login': 'platform/login.html',
 };
-const ASSET_PREFIXES = ['/css/', '/js/', '/img/'];
+const ASSET_PREFIXES = ['/css/', '/js/', '/img/', '/fonts/'];
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -27,6 +28,7 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
 };
 
 // frame-src https: — o relatório é um link externo qualquer (Power BI etc.).
@@ -192,6 +194,10 @@ function createApp({ db, config }) {
       if (req.method !== 'GET' && req.method !== 'HEAD') return sendText(res, 405, 'Método não permitido');
       if (site.kind === 'platform' && ctx.path === '/') {
         res.writeHead(302, { Location: '/platform' });
+        return res.end();
+      }
+      if (site.kind === 'tenant' && TENANT_REDIRECTS[ctx.path]) {
+        res.writeHead(302, { Location: TENANT_REDIRECTS[ctx.path] });
         return res.end();
       }
       const pages = site.kind === 'tenant' ? TENANT_PAGES : PLATFORM_PAGES;

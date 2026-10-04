@@ -11,6 +11,11 @@ Produto próprio (projeto pessoal), multi-cliente. Visão geral, endereços e pa
 - **Frontend sem build:** HTML + CSS + JS (módulos ES) em `public/`. Texto vindo
   do servidor entra no DOM só por `textContent` (helper `el()` em
   `public/js/ui.js`), nunca por `innerHTML`.
+- **Visual:** design system "Portal BI" (claude.ai/design, projeto
+  `5f8ecd33-eb08-4f1e-afd5-76547d8aa2c8`). Tokens em `public/css/app.css`; uma
+  cor de marca por cliente, o resto derivado. Ícones Lucide como SVG inline
+  (`icon()` em `ui.js`), sem fonte de ícones por CDN. Nome do produto nunca em
+  tela de cliente. Vocabulário: "painel" para o usuário, "relatório" no admin.
 - **CSP rígida** (`src/app.js`): sem script/estilo inline. Nada de `style="..."`
   em HTML nem em string; ajuste dinâmico via `element.style` em JS é permitido.
 - **Isolamento entre clientes:** toda função de domínio recebe `tenantId` e

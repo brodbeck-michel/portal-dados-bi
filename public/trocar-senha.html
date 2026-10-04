@@ -4,35 +4,44 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Trocar senha</title>
+  <script src="/js/theme-init.js"></script>
   <link rel="stylesheet" href="/css/app.css">
   <script type="module" src="/js/trocar-senha.js"></script>
 </head>
 <body>
-  <main class="auth-page">
-    <form class="auth-card" id="password-form" novalidate>
-      <div class="auth-brand">
-        <img data-brand-logo hidden alt="">
-        <h1>Trocar senha</h1>
-        <p class="muted small" id="password-intro">Escolha uma senha nova para continuar.</p>
+  <main class="auth">
+    <section class="auth-brand">
+      <div data-brand-mark></div>
+      <div class="auth-headline">
+        <h1 class="auth-title" data-brand-title></h1>
+        <p class="auth-message" data-brand-message></p>
       </div>
-      <div class="alert alert-error" id="password-error" hidden></div>
-      <div class="field">
-        <label for="currentPassword">Senha atual</label>
-        <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" required>
-      </div>
-      <div class="field">
-        <label for="newPassword">Nova senha</label>
-        <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" required>
-        <div class="field-hint">Pelo menos 10 caracteres, com letras e números.</div>
-      </div>
-      <div class="field">
-        <label for="confirmPassword">Repita a nova senha</label>
-        <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required>
-      </div>
-      <button type="submit" class="btn-primary">Salvar nova senha</button>
-      <p class="small"><a href="/" id="password-cancel">Voltar ao portal</a> · <a href="#" id="password-logout">Sair</a></p>
-    </form>
+      <p class="auth-foot" data-brand-foot></p>
+    </section>
+    <section class="auth-form-side">
+      <form class="auth-form" id="password-form" novalidate>
+        <div>
+          <h2 class="auth-form-title">Trocar senha</h2>
+          <p class="auth-form-sub" id="password-intro">Escolha uma senha nova para continuar.</p>
+        </div>
+        <div class="alert alert-error" id="password-error" hidden></div>
+        <div class="field">
+          <label for="currentPassword">Senha atual</label>
+          <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" required>
+        </div>
+        <div class="field">
+          <label for="newPassword">Nova senha</label>
+          <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" required>
+          <div class="field-hint">Pelo menos 10 caracteres, com letras e números.</div>
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Repita a nova senha</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="btn-primary">Salvar nova senha</button>
+        <p class="auth-form-foot"><a href="/" id="password-cancel">Voltar ao portal</a> · <a href="#" id="password-logout">Sair</a></p>
+      </form>
+    </section>
   </main>
-  <p class="product-foot">Portal de Dados BI</p>
 </body>
 </html>

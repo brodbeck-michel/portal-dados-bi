@@ -64,26 +64,37 @@ module.exports = (api) => {
     const token = sessions.createSession(ctx.db, ctx.config, { scope: 'tenant', tenantId: ctx.tenant.id, operatorId, ip: ctx.ip });
     setSessionCookie(ctx, token);
     audit.record(ctx.db, ctx, { event: 'support.session_started', actor: { operatorId, label: `Suporte: ${op.email}` } });
-    ctx.res.writeHead(302, { Location: '/admin' });
+    ctx.res.writeHead(302, { Location: '/#/admin/relatorios' });
     return ctx.res.end();
   });
 
   // Marca do cliente: pública, a tela de login precisa dela antes do login.
-  api.get('/api/branding', async (ctx) => ({
-    name: ctx.tenant.name,
-    color: ctx.tenant.brand_color,
-    logoUrl: ctx.tenant.has_logo ? `/api/branding/logo?v=${encodeURIComponent(ctx.tenant.updated_at)}` : null,
-  }));
-
-  api.get('/api/branding/logo', async (ctx) => {
-    const logo = tenants.getLogo(ctx.db, ctx.tenant.id);
-    if (!logo) return sendJson(ctx.res, 404, { error: 'Sem logo' });
-    const data = Buffer.from(logo.logo_data);
-    ctx.res.writeHead(200, {
-      'Content-Type': logo.logo_mime,
-      'Content-Length': data.length,
-      'Cache-Control': 'public, max-age=86400',
-    });
-    ctx.res.end(data);
+  // O título substitui o nome do produto em todas as telas do cliente.
+  api.get('/api/branding', async (ctx) => {
+    const t = ctx.tenant;
+    const v = encodeURIComponent(t.updated_at);
+    const logoUrl = t.has_logo ? `/api/branding/logo?v=${v}` : null;
+    return {
+      name: t.name,
+      title: t.portal_title || t.name,
+      message: t.login_message || null,
+      color: t.brand_color,
+      logoUrl,
+      faviconUrl: t.has_favicon ? `/api/branding/favicon?v=${v}` : logoUrl,
+    };
   });
+
+  for (const kind of tenants.IMAGE_KINDS) {
+    api.get(`/api/branding/${kind}`, async (ctx) => {
+      const img = tenants.getImage(ctx.db, ctx.tenant.id, kind);
+      if (!img) return sendJson(ctx.res, 404, { error: 'Sem imagem' });
+      const data = Buffer.from(img.data);
+      ctx.res.writeHead(200, {
+        'Content-Type': img.mime,
+        'Content-Length': data.length,
+        'Cache-Control': 'public, max-age=86400',
+      });
+      ctx.res.end(data);
+    });
+  }
 };

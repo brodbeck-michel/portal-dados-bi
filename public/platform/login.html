@@ -1,32 +1,42 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="product">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Operador · Portal de Dados BI</title>
+  <script src="/js/theme-init.js"></script>
   <link rel="stylesheet" href="/css/app.css">
   <link rel="icon" href="/img/icone.svg">
   <script type="module" src="/js/login.js"></script>
 </head>
 <body data-mode="platform">
-  <main class="auth-page">
-    <form class="auth-card" id="login-form" novalidate>
-      <div class="auth-brand">
-        <img src="/img/icone.svg" alt="" width="48" height="48">
-        <h1>Portal de Dados BI</h1>
-        <p class="muted small">Área do operador da plataforma</p>
+  <main class="auth">
+    <section class="auth-brand">
+      <div class="auth-brand-mark"><span class="brand-chip" aria-hidden="true">P</span><span>Portal de Dados BI</span></div>
+      <div class="auth-headline">
+        <h1 class="auth-title">Área do operador</h1>
+        <p class="auth-message">Cadastro de clientes, marca de cada portal e acesso de suporte.</p>
       </div>
-      <div class="alert alert-error" id="login-error" hidden></div>
-      <div class="field">
-        <label for="email">E-mail</label>
-        <input type="email" id="email" name="email" autocomplete="username" required>
-      </div>
-      <div class="field">
-        <label for="password">Senha</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required>
-      </div>
-      <button type="submit" class="btn-primary">Entrar</button>
-    </form>
+      <p class="auth-foot">Portal de Dados BI</p>
+    </section>
+    <section class="auth-form-side">
+      <form class="auth-form" id="login-form" novalidate>
+        <div>
+          <h2 class="auth-form-title">Entrar</h2>
+          <p class="auth-form-sub">Acesso do operador da plataforma.</p>
+        </div>
+        <div class="alert alert-error" id="login-error" hidden></div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Senha</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn-primary">Entrar</button>
+      </form>
+    </section>
   </main>
 </body>
 </html>

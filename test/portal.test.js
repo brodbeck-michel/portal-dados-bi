@@ -61,7 +61,8 @@ test('abrir relatório fica no registro com quem, qual e IP', async () => {
   assert.ok(row.ip);
 
   const recent = await vendedor.get('/api/portal/home');
-  assert.deepEqual(recent.json.recent, [vendas.id]);
+  assert.deepEqual(recent.json.recent.map((r) => r.id), [vendas.id]);
+  assert.ok(recent.json.recent[0].openedAt);
 
   const csv = await admin.get('/api/admin/audit.csv?de=2000-01-01&tipo=acessos');
   assert.match(csv.headers['content-type'], /text\/csv/);

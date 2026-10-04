@@ -1,6 +1,6 @@
 // Área do operador: cadastro de clientes, marca, administradores e suporte.
 import {
-  api, el, openDialog, showSecret, field, toast, formatDateTime, dropdown, initials,
+  api, el, openDialog, showSecret, field, toast, formatDateTime, dropdown, initials, icon, currentTheme, toggleTheme,
 } from './ui.js';
 
 const LOGIN = '/platform/login';
@@ -46,11 +46,11 @@ function render() {
       el('tbody', {}, rows))));
 }
 
-// Lê o arquivo de logo como data URL (o servidor valida tipo e tamanho).
+// Lê a imagem escolhida como data URL (o servidor valida tipo e tamanho).
 function readFile(input) {
   const file = input.files?.[0];
   if (!file) return Promise.resolve(null);
-  if (file.size > 300 * 1024) return Promise.reject(new Error('A logo deve ter no máximo 300 KB'));
+  if (file.size > 300 * 1024) return Promise.reject(new Error('A imagem deve ter no máximo 300 KB'));
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -70,13 +70,19 @@ function tenantDialog(t) {
   });
   updatePreview();
 
+  const imageInput = (name, id) => el('input', { type: 'file', name, id, accept: 'image/png,image/jpeg,image/webp' });
   const form = el('form', { novalidate: true },
-    field('Nome exibido', el('input', { type: 'text', name: 'name', id: 'f-tname', value: t?.name || '', maxlength: '80' })),
+    field('Nome do cliente', el('input', { type: 'text', name: 'name', id: 'f-tname', value: t?.name || '', maxlength: '80' })),
     isNew ? el('div', { class: 'field' }, el('label', { for: 'f-slug', text: 'Endereço (não muda depois)' }), slugInput, preview) : null,
+    field('Título do portal (opcional)', el('input', { type: 'text', name: 'portal_title', id: 'f-ptitle', value: t?.portalTitle || '', maxlength: '60', placeholder: 'ex.: Painéis Acme' }),
+      'Aparece no login e na aba do navegador. Em branco, usa o nome do cliente.'),
+    field('Mensagem do login (opcional)', el('textarea', { name: 'login_message', id: 'f-pmsg', maxlength: '240', placeholder: 'Entre com o acesso enviado pelo administrador.' }, t?.loginMessage || '')),
     el('div', { class: 'row' },
       field('Cor principal', el('input', { type: 'color', name: 'brand_color', id: 'f-color', value: t?.brandColor || '#0f766e' })),
-      field('Logo (PNG, JPG ou WEBP, até 300 KB)', el('input', { type: 'file', name: 'logo', id: 'f-logo', accept: 'image/png,image/jpeg,image/webp' }))),
+      field('Logo (PNG, JPG ou WEBP, até 300 KB)', imageInput('logo', 'f-logo'))),
     !isNew && t.hasLogo ? el('label', { class: 'check' }, el('input', { type: 'checkbox', name: 'removeLogo' }), 'Remover a logo atual') : null,
+    field('Ícone da aba (opcional, quadrado)', imageInput('favicon', 'f-favicon'), 'Em branco, a aba usa a logo; sem logo, a inicial do cliente na cor principal.'),
+    !isNew && t.hasFavicon ? el('label', { class: 'check' }, el('input', { type: 'checkbox', name: 'removeFavicon' }), 'Remover o ícone atual') : null,
     !isNew ? el('label', { class: 'check' }, el('input', { type: 'checkbox', name: 'active', checked: t.active }), 'Ativo (desmarque para suspender o portal do cliente)') : null,
     isNew ? el('div', {},
       el('h3', { text: 'Primeiro administrador (opcional)' }),
@@ -96,9 +102,17 @@ function tenantDialog(t) {
         kind: 'primary',
         onClick: async (close) => {
           const logo = await readFile(form.logo);
-          const brand = { name: form.name.value, brand_color: form.brand_color.value };
+          const favicon = await readFile(form.favicon);
+          const brand = {
+            name: form.name.value,
+            brand_color: form.brand_color.value,
+            portal_title: form.portal_title.value,
+            login_message: form.login_message.value,
+          };
           if (isNew) {
-            const created = await call('POST', '/api/platform/tenants', { ...brand, slug: slugInput.value, logo: logo || undefined });
+            const created = await call('POST', '/api/platform/tenants', {
+              ...brand, slug: slugInput.value, logo: logo || undefined, favicon: favicon || undefined,
+            });
             let secret = null;
             if (form.adminEmail.value.trim()) {
               secret = await call('POST', `/api/platform/tenants/${created.id}/admins`, { name: form.adminName.value, email: form.adminEmail.value })
@@ -116,8 +130,10 @@ function tenantDialog(t) {
             return;
           }
           await call('PUT', `/api/platform/tenants/${t.id}`, { ...brand, active: form.active.checked });
-          if (logo) await call('PUT', `/api/platform/tenants/${t.id}/logo`, { logo });
+          if (logo) await call('PUT', `/api/platform/tenants/${t.id}/logo`, { image: logo });
           else if (form.removeLogo?.checked) await call('DELETE', `/api/platform/tenants/${t.id}/logo`);
+          if (favicon) await call('PUT', `/api/platform/tenants/${t.id}/favicon`, { image: favicon });
+          else if (form.removeFavicon?.checked) await call('DELETE', `/api/platform/tenants/${t.id}/favicon`);
           close();
           toast('Cliente atualizado');
           await refresh();
@@ -176,9 +192,14 @@ async function support(t) {
 async function start() {
   me = await call('GET', '/api/platform/me');
   const trigger = el('button', { type: 'button', class: 'btn-ghost user-chip', 'aria-label': 'Menu do operador' },
-    el('span', { class: 'avatar', text: initials(me.name) }), el('span', { class: 'user-name', text: me.name }), '▾');
+    el('span', { class: 'avatar', text: initials(me.name) }), el('span', { class: 'user-name', text: me.name }));
+  const themeContent = () => (currentTheme() === 'dark' ? [icon('sun'), 'Tema claro'] : [icon('moon'), 'Tema escuro']);
+  const themeItem = el('button', { type: 'button' }, themeContent());
+  themeItem.addEventListener('click', () => { toggleTheme(); themeItem.replaceChildren(...themeContent()); });
   document.getElementById('operator-menu').replaceChildren(dropdown(trigger, [
-    el('div', { class: 'muted small menu-head', text: me.email }),
+    el('div', { class: 'menu-head', text: me.email }),
+    el('div', { class: 'menu-sep' }),
+    themeItem,
     el('div', { class: 'menu-sep' }),
     el('button', {
       type: 'button',

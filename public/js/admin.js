@@ -1,19 +1,52 @@
 // Administração do cliente: relatórios, pastas, usuários, acessos e registro.
+// Desenhada dentro da casca do portal (js/app.js) por mountAdmin().
 import {
-  api, el, applyBrand, openDialog, confirmDialog, showSecret, field, toast, formatDateTime, normalize,
+  api, el, openDialog, confirmDialog, showSecret, field, toast, formatDateTime, normalize,
 } from './ui.js';
-import { renderUserMenu } from './user-menu.js';
 
-const panel = document.getElementById('panel');
-const tabs = [...document.querySelectorAll('[data-tab]')];
+export const ADMIN_SECTIONS = {
+  relatorios: {
+    title: 'Relatórios', icon: 'layout-dashboard',
+    intro: 'Os painéis do Power BI que aparecem no portal, e quem pode abrir cada um.',
+  },
+  pastas: {
+    title: 'Pastas', icon: 'folder',
+    intro: 'Pastas organizam os relatórios no portal. Desativar uma pasta esconde todos os relatórios dela, mesmo de quem tem acesso.',
+  },
+  usuarios: {
+    title: 'Usuários', icon: 'users',
+    intro: 'Quem entra no portal. Administradores veem todos os relatórios; usuários veem só os liberados para eles.',
+  },
+  registro: {
+    title: 'Registro de acessos', icon: 'list',
+    intro: 'Logins, relatórios abertos e alterações feitas na administração.',
+  },
+};
 
+let panel;
+let section;
 let me;
+let notify = () => {};
 let users = [];
 let folders = [];
 let reports = [];
 const searchTerms = { relatorios: '', pastas: '', usuarios: '' };
 
-applyBrand().catch(() => {});
+// Desenha a seção dentro de container. onChange roda depois de toda alteração
+// (a coluna do portal mostra pastas e contagens).
+export async function mountAdmin(container, user, which, { onChange } = {}) {
+  me = user;
+  section = which;
+  notify = onChange || (() => {});
+  const mine = el('section', { class: 'admin-panel', 'aria-live': 'polite' }, el('p', { class: 'muted', text: 'Carregando...' }));
+  panel = mine;
+  const info = ADMIN_SECTIONS[which];
+  container.replaceChildren(el('div', { class: 'page is-admin' },
+    el('div', {}, el('h1', { text: info.title }), el('p', { class: 'admin-intro', text: info.intro })),
+    mine));
+  await reload();
+  if (panel === mine) render();
+}
 
 async function reload() {
   [users, folders, reports] = await Promise.all([
@@ -23,23 +56,15 @@ async function reload() {
   ]);
 }
 
-function currentTab() {
-  const t = location.hash.slice(1);
-  return tabs.some((b) => b.dataset.tab === t) ? t : 'relatorios';
-}
-
 function render() {
-  const tab = currentTab();
-  tabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-  ({ relatorios: renderReports, pastas: renderFolders, usuarios: renderUsers, registro: renderAudit })[tab]();
+  if (!panel?.isConnected) return;
+  ({ relatorios: renderReports, pastas: renderFolders, usuarios: renderUsers, registro: renderAudit })[section]();
 }
-
-tabs.forEach((b) => b.addEventListener('click', () => { location.hash = b.dataset.tab; }));
-window.addEventListener('hashchange', render);
 
 async function refresh() {
   await reload();
   render();
+  await notify();
 }
 
 // ── Peças comuns ──────────────────────────────────────────────────────────
@@ -113,7 +138,7 @@ function renderReports() {
 function reportDialog(report) {
   if (!folders.length) {
     toast('Crie uma pasta antes de cadastrar relatórios', 'error');
-    location.hash = 'pastas';
+    location.hash = '#/admin/pastas';
     return;
   }
   const folderSelect = el('select', { name: 'folder_id', id: 'f-folder' },
@@ -265,7 +290,6 @@ function renderFolders() {
         btn('Excluir', () => removeFolder(f), 'btn-danger')),
     ));
   panel.replaceChildren(
-    el('p', { class: 'muted small', text: 'Pastas organizam os relatórios no portal. Desativar uma pasta esconde todos os relatórios dela, mesmo de quem tem acesso.' }),
     toolbar('pastas', 'Buscar pasta...',
       el('button', { type: 'button', class: 'btn-primary', text: 'Nova pasta', onclick: () => folderDialog(null) })),
     table(['Pasta', 'Relatórios', 'Status', ''], rows,
@@ -499,8 +523,9 @@ async function renderAudit() {
   );
   panel.replaceChildren(filters, el('p', { class: 'muted', text: 'Carregando...' }));
 
+  const target = panel;
   const { total, rows, labels } = await api('GET', `/api/admin/audit?${auditQuery({ limite: PAGE })}`);
-  if (currentTab() !== 'registro') return;
+  if (panel !== target || section !== 'registro' || !panel.isConnected) return;
   const body = rows.map((r) => el('tr', {},
     el('td', { class: 'nowrap', text: formatDateTime(r.created_at) }),
     el('td', { text: r.actor_label || '—' }),
@@ -524,21 +549,3 @@ async function renderAudit() {
     total > PAGE ? pager : null,
   );
 }
-
-// ── Início ────────────────────────────────────────────────────────────────
-
-async function start() {
-  const { user } = await api('GET', '/api/me');
-  if (user.role !== 'admin') {
-    location.href = '/';
-    return;
-  }
-  me = user;
-  document.getElementById('support-banner').hidden = !user.isSupport;
-  renderUserMenu(document.getElementById('user-menu'), user, { current: 'admin' });
-  await refresh();
-}
-
-start().catch((err) => {
-  if (err.status !== 401) panel.replaceChildren(el('div', { class: 'alert alert-error', text: err.message }));
-});

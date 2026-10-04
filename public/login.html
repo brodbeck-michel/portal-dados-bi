@@ -4,30 +4,43 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Entrar</title>
+  <script src="/js/theme-init.js"></script>
   <link rel="stylesheet" href="/css/app.css">
   <script type="module" src="/js/login.js"></script>
 </head>
 <body data-mode="tenant">
-  <main class="auth-page">
-    <form class="auth-card" id="login-form" novalidate>
-      <div class="auth-brand">
-        <img data-brand-logo hidden alt="">
-        <h1 data-brand-name></h1>
-        <p class="muted small">Entre com seu e-mail e senha</p>
+  <main class="auth">
+    <section class="auth-brand">
+      <div data-brand-mark></div>
+      <div class="auth-headline">
+        <h1 class="auth-title" data-brand-title></h1>
+        <p class="auth-message" data-brand-message></p>
       </div>
-      <div class="alert alert-error" id="login-error" hidden></div>
-      <div class="field">
-        <label for="email">E-mail</label>
-        <input type="email" id="email" name="email" autocomplete="username" required>
-      </div>
-      <div class="field">
-        <label for="password">Senha</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required>
-      </div>
-      <button type="submit" class="btn-primary">Entrar</button>
-      <p class="muted small">Esqueceu a senha? Fale com o administrador do portal.</p>
-    </form>
+      <p class="auth-foot" data-brand-foot></p>
+    </section>
+    <section class="auth-form-side">
+      <form class="auth-form" id="login-form" novalidate>
+        <div>
+          <h2 class="auth-form-title">Entrar</h2>
+          <p class="auth-form-sub">Informe seu e-mail e senha.</p>
+        </div>
+        <div class="alert alert-error" id="login-error" hidden></div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <div class="label-row">
+            <label for="password">Senha</label>
+            <button type="button" class="link-button" id="forgot">Esqueci minha senha</button>
+          </div>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+        </div>
+        <div class="alert alert-info" id="forgot-info" hidden>Peça uma nova senha ao administrador do portal.</div>
+        <button type="submit" class="btn-primary">Entrar</button>
+        <p class="auth-form-foot">Problemas para acessar? Fale com o administrador do portal.</p>
+      </form>
+    </section>
   </main>
-  <p class="product-foot">Portal de Dados BI</p>
 </body>
 </html>

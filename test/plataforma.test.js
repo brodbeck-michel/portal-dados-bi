@@ -34,17 +34,34 @@ test('endereço do cliente: formato, reservado e duplicado', async () => {
 test('marca pública do cliente, com cor e logo', async () => {
   const site = srv.browser('acme.portal.test');
   let brand = await site.get('/api/branding');
-  assert.deepEqual(brand.json, { name: 'Acme', color: '#1d4ed8', logoUrl: null });
+  assert.deepEqual(brand.json, { name: 'Acme', title: 'Acme', message: null, color: '#1d4ed8', logoUrl: null, faviconUrl: null });
 
   const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4a00000000049454e44ae426082', 'hex');
-  const up = await op.put(`/api/platform/tenants/${tenant.id}/logo`, { logo: `data:image/png;base64,${png.toString('base64')}` });
+  const up = await op.put(`/api/platform/tenants/${tenant.id}/logo`, { image: `data:image/png;base64,${png.toString('base64')}` });
   assert.equal(up.status, 200);
   brand = await site.get('/api/branding');
   assert.ok(brand.json.logoUrl);
   const logo = await site.get('/api/branding/logo');
   assert.equal(logo.headers['content-type'], 'image/png');
 
-  const fake = await op.put(`/api/platform/tenants/${tenant.id}/logo`, { logo: 'data:image/png;base64,PHN2Zz48L3N2Zz4=' });
+  assert.equal(brand.json.faviconUrl, brand.json.logoUrl, 'sem ícone próprio, a aba usa a logo');
+
+  const titled = await op.put(`/api/platform/tenants/${tenant.id}`, { portal_title: 'Painéis Acme', login_message: 'Os números da operação.' });
+  assert.equal(titled.json.portalTitle, 'Painéis Acme');
+  brand = await site.get('/api/branding');
+  assert.equal(brand.json.title, 'Painéis Acme');
+  assert.equal(brand.json.message, 'Os números da operação.');
+  assert.equal(brand.json.name, 'Acme');
+  await op.put(`/api/platform/tenants/${tenant.id}`, { portal_title: '' });
+  assert.equal((await site.get('/api/branding')).json.title, 'Acme', 'título vazio volta ao nome do cliente');
+
+  const fav = await op.put(`/api/platform/tenants/${tenant.id}/favicon`, { image: `data:image/png;base64,${png.toString('base64')}` });
+  assert.equal(fav.json.hasFavicon, true);
+  brand = await site.get('/api/branding');
+  assert.match(brand.json.faviconUrl, /^\/api\/branding\/favicon/);
+  assert.equal((await site.get('/api/branding/favicon')).headers['content-type'], 'image/png');
+
+  const fake = await op.put(`/api/platform/tenants/${tenant.id}/logo`, { image: 'data:image/png;base64,PHN2Zz48L3N2Zz4=' });
   assert.equal(fake.status, 400);
 });
 
@@ -62,7 +79,7 @@ test('suporte: link de uso único abre sessão de admin registrada como suporte'
   const support = srv.browser('acme.portal.test');
   const first = await support.get(path);
   assert.equal(first.status, 302);
-  assert.equal(first.headers.location, '/admin');
+  assert.equal(first.headers.location, '/#/admin/relatorios');
   const me = await support.get('/api/me');
   assert.equal(me.json.user.isSupport, true);
   assert.equal(me.json.user.role, 'admin');

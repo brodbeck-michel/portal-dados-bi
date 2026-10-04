@@ -20,15 +20,28 @@ momento em que a pessoa abre o relatório.
 |---|---|---|
 | Operador da plataforma | `BASE_DOMAIN/platform` | `https://bi.vitrocrm.cloud/platform` |
 | Cliente (portal) | `<cliente>.BASE_DOMAIN` | `https://acme.bi.vitrocrm.cloud` |
-| Cliente (administração) | `<cliente>.BASE_DOMAIN/admin` | `https://acme.bi.vitrocrm.cloud/admin` |
+| Cliente (administração) | `<cliente>.BASE_DOMAIN/#/admin/relatorios` (`/admin` redireciona) | `https://acme.bi.vitrocrm.cloud/admin` |
 
 Localmente, `BASE_DOMAIN=localhost`: `http://localhost:3010/platform` e
 `http://acme.localhost:3010` (Chrome e Firefox resolvem `*.localhost`
 sozinhos).
 
+## Marca do cliente (white label)
+
+O nome do produto não aparece em nenhuma tela do cliente. Cada portal usa a
+marca configurada pelo operador: **uma cor** (todo o resto deriva dela com
+`color-mix`; marca clara como amarelo ganha texto escuro automaticamente),
+título do portal (login e aba), mensagem do login, logo e ícone da aba (sem
+ícone, usa a logo; sem logo, a inicial na cor da marca). Tema claro/escuro
+por pessoa, salvo no navegador.
+
+Fonte do visual: design system "Portal BI" no claude.ai/design (protótipo
+e `readme.md` com as regras).
+
 ## Papéis
 
-- **Operador da plataforma** — cria clientes, define a marca (nome, cor, logo),
+- **Operador da plataforma** — cria clientes, define a marca (nome, título do
+  portal, mensagem do login, cor, logo, ícone da aba),
   cria o primeiro administrador e entra em qualquer cliente como **suporte**
   (link de uso único; tudo que fizer fica registrado como "Suporte: e-mail").
   Nasce por script, nunca por tela.
@@ -90,6 +103,10 @@ src/
   tenants.js users.js catalog.js access.js audit.js   regras por domínio
   routes/              tenant-auth, portal, admin, platform
 public/                telas em HTML/CSS/JS puro (sem build)
+  index.html + js/app.js   casca do cliente: coluna lateral, Início, pastas,
+                           favoritos, painel aberto e administração (js/admin.js)
+  css/app.css              tokens do design system e todas as telas
+  fonts/                   IBM Plex Sans auto-hospedada (OFL)
 scripts/               criar-operador.js, backup.js
 test/                  node:test
 docs/DEPLOY-VPS.md     subir na VPS Hostinger com o Caddy

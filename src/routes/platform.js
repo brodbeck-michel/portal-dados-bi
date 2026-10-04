@@ -22,7 +22,10 @@ function present(ctx, t) {
     name: t.name,
     brandColor: t.brand_color,
     active: !!t.active,
+    portalTitle: t.portal_title,
+    loginMessage: t.login_message,
     hasLogo: !!t.has_logo,
+    hasFavicon: !!t.has_favicon,
     url: tenantUrl(ctx, t.slug),
     userCount: t.user_count,
     reportCount: t.report_count,
@@ -66,7 +69,9 @@ module.exports = (api) => {
     const body = await readJson(ctx.req);
     const tenant = tenants.create(ctx.db, body);
     audit.record(ctx.db, ctx, { event: 'tenant.created', tenantId: tenant.id, actor: operatorActor(op), target: tenant.slug });
-    if (body.logo) tenants.setLogo(ctx.db, tenant.id, body.logo);
+    for (const kind of tenants.IMAGE_KINDS) {
+      if (body[kind]) tenants.setImage(ctx.db, tenant.id, kind, body[kind]);
+    }
     return present(ctx, tenants.get(ctx.db, tenant.id));
   });
 
@@ -78,27 +83,29 @@ module.exports = (api) => {
     return present(ctx, t);
   });
 
-  api.put('/api/platform/tenants/:id/logo', async (ctx) => {
-    requireOperator(ctx);
-    const body = await readJson(ctx.req, 600_000);
-    return present(ctx, tenants.setLogo(ctx.db, pathId(ctx), body.logo));
-  });
+  // Logo e ícone da aba: PUT envia, GET mostra na tela do operador (a CSP,
+  // img-src 'self', exige que venha deste endereço), DELETE remove.
+  for (const kind of tenants.IMAGE_KINDS) {
+    api.put(`/api/platform/tenants/:id/${kind}`, async (ctx) => {
+      requireOperator(ctx);
+      const body = await readJson(ctx.req, 600_000);
+      return present(ctx, tenants.setImage(ctx.db, pathId(ctx), kind, body.image));
+    });
 
-  // A tela do operador fica em outra origem que a do cliente; a CSP
-  // (img-src 'self') exige que a logo venha deste endereço.
-  api.get('/api/platform/tenants/:id/logo', async (ctx) => {
-    requireOperator(ctx);
-    const logo = tenants.getLogo(ctx.db, pathId(ctx));
-    if (!logo) throw notFound('Sem logo');
-    const data = Buffer.from(logo.logo_data);
-    ctx.res.writeHead(200, { 'Content-Type': logo.logo_mime, 'Content-Length': data.length, 'Cache-Control': 'no-cache' });
-    ctx.res.end(data);
-  });
+    api.get(`/api/platform/tenants/:id/${kind}`, async (ctx) => {
+      requireOperator(ctx);
+      const img = tenants.getImage(ctx.db, pathId(ctx), kind);
+      if (!img) throw notFound('Sem imagem');
+      const data = Buffer.from(img.data);
+      ctx.res.writeHead(200, { 'Content-Type': img.mime, 'Content-Length': data.length, 'Cache-Control': 'no-cache' });
+      ctx.res.end(data);
+    });
 
-  api.delete('/api/platform/tenants/:id/logo', async (ctx) => {
-    requireOperator(ctx);
-    return present(ctx, tenants.clearLogo(ctx.db, pathId(ctx)));
-  });
+    api.delete(`/api/platform/tenants/:id/${kind}`, async (ctx) => {
+      requireOperator(ctx);
+      return present(ctx, tenants.clearImage(ctx.db, pathId(ctx), kind));
+    });
+  }
 
   api.get('/api/platform/tenants/:id/admins', async (ctx) => {
     requireOperator(ctx);

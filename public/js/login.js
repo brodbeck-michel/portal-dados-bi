@@ -1,12 +1,17 @@
 // Login do cliente (data-mode="tenant") e do operador (data-mode="platform").
-import { api, applyBrand, showFormError } from './ui.js';
+import { api, applyBrand, fillAuthBrand, showFormError } from './ui.js';
 
 const platform = document.body.dataset.mode === 'platform';
 const form = document.getElementById('login-form');
 const errorBox = document.getElementById('login-error');
 
 if (!platform) {
-  applyBrand().catch(() => {});
+  applyBrand().then((brand) => fillAuthBrand(brand)).catch(() => {});
+  const forgot = document.getElementById('forgot');
+  forgot.addEventListener('click', () => {
+    document.getElementById('forgot-info').hidden = false;
+    forgot.hidden = true;
+  });
   if (new URLSearchParams(location.search).get('suporte') === 'expirado') {
     errorBox.textContent = 'O link de suporte expirou ou já foi usado. Gere outro na área do operador.';
     errorBox.hidden = false;

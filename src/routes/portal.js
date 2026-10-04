@@ -28,10 +28,10 @@ module.exports = (api) => {
       favorites = ctx.db.prepare('SELECT report_id FROM favorites WHERE user_id = ? ORDER BY created_at DESC')
         .all(a.userId).map((r) => r.report_id).filter((id) => visibleIds.has(id));
       recent = ctx.db.prepare(`
-        SELECT report_id FROM audit_log
+        SELECT report_id AS id, MAX(created_at) AS openedAt FROM audit_log
         WHERE tenant_id = ? AND actor_user_id = ? AND event = 'report.opened' AND report_id IS NOT NULL
-        GROUP BY report_id ORDER BY MAX(created_at) DESC LIMIT 12
-      `).all(tenantId, a.userId).map((r) => r.report_id).filter((id) => visibleIds.has(id)).slice(0, 6);
+        GROUP BY report_id ORDER BY openedAt DESC LIMIT 12
+      `).all(tenantId, a.userId).filter((r) => visibleIds.has(r.id)).slice(0, 6).map((r) => ({ ...r }));
     }
     return { folders, favorites, recent };
   });

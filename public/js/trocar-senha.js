@@ -1,12 +1,12 @@
-import { api, applyBrand, showFormError } from './ui.js';
+import { api, applyBrand, fillAuthBrand, showFormError } from './ui.js';
 
 const form = document.getElementById('password-form');
 const errorBox = document.getElementById('password-error');
 
-applyBrand().catch(() => {});
+applyBrand().then((brand) => fillAuthBrand(brand)).catch(() => {});
 
 const { user } = await api('GET', '/api/me');
-if (user.isSupport) location.href = '/admin';
+if (user.isSupport) location.href = '/#/admin/relatorios';
 if (user.mustChangePassword) {
   document.getElementById('password-intro').textContent =
     'Você entrou com uma senha provisória. Escolha uma senha sua para continuar.';
